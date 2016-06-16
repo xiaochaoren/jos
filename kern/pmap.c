@@ -158,6 +158,9 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
+	uint32_t envs_size = NENV * sizeof(struct Env);
+	envs = (struct Env *) boot_alloc(envs_size);
+	memset(envs, 0, envs_size);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -181,7 +184,7 @@ mem_init(void)
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
-	size_t map_pages_size = ROUNDUP(sizeof(struct PageInfo) * npages, PGSIZE);
+	size_t map_pages_size = ROUNDUP(pages_size, PGSIZE);
 	boot_map_region(kern_pgdir, UPAGES, map_pages_size, PADDR(pages), PTE_U | PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
@@ -191,6 +194,8 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
+	size_t map_envs_size = ROUNDUP(envs_size, PGSIZE);
+	boot_map_region(kern_pgdir, UENVS, map_envs_size, PADDR(envs), PTE_U | PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -274,12 +279,12 @@ page_init(void)
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
 	size_t io_index = PGNUM(IOPHYSMEM);
-	char *end_mem = (char *) (&pages[npages]);
+	char *end_mem = (char *) (&envs[NENV]);
 	end_mem = ROUNDUP(end_mem, PGSIZE);
 	size_t end_index = PGNUM(PADDR((void *)end_mem));
 	size_t i;
 	for (i = npages - 1; i >= 1; i--) {
-		if (i > 0 && (i < io_index || i >= end_index)) {
+		if (i < io_index || i >= end_index) {
 			pages[i].pp_ref = 0;
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];
