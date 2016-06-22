@@ -47,10 +47,87 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
+#define ARRAY_TRAPHANDLER(name, num)   \
+.data;  \
+    .long name;  \
+.text;  \
+    TRAPHANDLER(name, num)
 
+#define ARRAY_TRAPHANDLER_NOEC(name, num)   \
+.data;   \
+    .long name; \
+.text;   \
+    TRAPHANDLER_NOEC(name, num)
 
+.text
+    .global _alltraps
+.data
+    .global vectors
+vectors:
+    ARRAY_TRAPHANDLER_NOEC(vector0, 0)
+    ARRAY_TRAPHANDLER_NOEC(vector1, 1)
+    ARRAY_TRAPHANDLER_NOEC(vector2, 2)
+    ARRAY_TRAPHANDLER_NOEC(vector3, 3)
+    ARRAY_TRAPHANDLER_NOEC(vector4, 4)
+    ARRAY_TRAPHANDLER_NOEC(vector5, 5)
+    ARRAY_TRAPHANDLER_NOEC(vector6, 6)
+    ARRAY_TRAPHANDLER_NOEC(vector7, 7)
+    ARRAY_TRAPHANDLER(vector8, 8)
+    ARRAY_TRAPHANDLER_NOEC(vector9, 9)
+    ARRAY_TRAPHANDLER(vector10, 10)
+    ARRAY_TRAPHANDLER(vector11, 11)
+    ARRAY_TRAPHANDLER(vector12, 12)
+    ARRAY_TRAPHANDLER(vector13, 13)
+    ARRAY_TRAPHANDLER(vector14, 14)
+    ARRAY_TRAPHANDLER_NOEC(vector15, 15)
+    ARRAY_TRAPHANDLER_NOEC(vector16, 16)
+    ARRAY_TRAPHANDLER(vector17, 17)
+    ARRAY_TRAPHANDLER_NOEC(vector18, 18)
+    ARRAY_TRAPHANDLER_NOEC(vector19, 19)
+    ARRAY_TRAPHANDLER_NOEC(vector20, 20)
+    ARRAY_TRAPHANDLER_NOEC(vector21, 21)
+    ARRAY_TRAPHANDLER_NOEC(vector22, 22)
+    ARRAY_TRAPHANDLER_NOEC(vector23, 23)
+    ARRAY_TRAPHANDLER_NOEC(vector24, 24)
+    ARRAY_TRAPHANDLER_NOEC(vector25, 25)
+    ARRAY_TRAPHANDLER_NOEC(vector26, 26)
+    ARRAY_TRAPHANDLER_NOEC(vector27, 27)
+    ARRAY_TRAPHANDLER_NOEC(vector28, 28)
+    ARRAY_TRAPHANDLER_NOEC(vector29, 29)
+    ARRAY_TRAPHANDLER_NOEC(vector30, 30)
+    ARRAY_TRAPHANDLER_NOEC(vector31, 31)
+    ARRAY_TRAPHANDLER_NOEC(vector32, 32)
+    ARRAY_TRAPHANDLER_NOEC(vector33, 33)
+    ARRAY_TRAPHANDLER_NOEC(vector34, 34)
+    ARRAY_TRAPHANDLER_NOEC(vector35, 35)
+    ARRAY_TRAPHANDLER_NOEC(vector36, 36)
+    ARRAY_TRAPHANDLER_NOEC(vector37, 37)
+    ARRAY_TRAPHANDLER_NOEC(vector38, 38)
+    ARRAY_TRAPHANDLER_NOEC(vector39, 39)
+    ARRAY_TRAPHANDLER_NOEC(vector40, 40)
+    ARRAY_TRAPHANDLER_NOEC(vector41, 41)
+    ARRAY_TRAPHANDLER_NOEC(vector42, 42)
+    ARRAY_TRAPHANDLER_NOEC(vector43, 43)
+    ARRAY_TRAPHANDLER_NOEC(vector44, 44)
+    ARRAY_TRAPHANDLER_NOEC(vector45, 45)
+    ARRAY_TRAPHANDLER_NOEC(vector46, 46)
+    ARRAY_TRAPHANDLER_NOEC(vector47, 47)
+    ARRAY_TRAPHANDLER_NOEC(vector48, 48)
 
 /*
  * Lab 3: Your code here for _alltraps
  */
+
+.text
+    .global _alltraps
+
+_alltraps:
+    pushl %ds
+    pushl %es
+    pushal
+    movw $GD_KD, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    pushl %esp
+    call trap
 
