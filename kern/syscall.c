@@ -364,7 +364,59 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env *src_env, *dst_env;
+	struct PageInfo *page;
+	uintptr_t src_addr;
+	pte_t *pte;
+	int r;
+
+	if ((r = envid2env(0, &src_env, false)) < 0) {
+		return r;
+	}
+
+	if ((r = envid2env(envid, &dst_env, false)) < 0) {
+		return r;
+	}
+
+	if (dst_env->env_status != ENV_NOT_RUNNABLE || !dst_env->env_ipc_recving) {
+		return -E_IPC_NOT_RECV;
+	}
+
+	dst_env->env_ipc_perm = 0;
+
+	src_addr = (uintptr_t)srcva;
+	if (src_addr < UTOP) {
+		if (src_addr % PGSIZE != 0 || !(perm & PTE_U && perm & PTE_P) || perm & ~PTE_SYSCALL) {
+			return -E_INVAL;
+		}
+
+		page = page_lookup(src_env->env_pgdir, srcva, &pte);
+		if (!page || !(*pte & PTE_P && *pte & PTE_U)) {
+			return -E_INVAL;
+		}
+
+		if ((perm & PTE_W) && !(*pte & PTE_W)) {
+			return -E_INVAL;
+		}
+
+		if (dst_env->env_ipc_dstva) {
+			if ((r = page_insert(dst_env->env_pgdir, page, dst_env->env_ipc_dstva, perm)) < 0) {
+				return r;
+			}
+
+			dst_env->env_ipc_perm = perm;
+		}
+	}
+
+	dst_env->env_ipc_recving = false;
+	dst_env->env_ipc_dstva = NULL;
+	dst_env->env_ipc_from = src_env->env_id;
+	dst_env->env_ipc_value = value;
+	dst_env->env_tf.tf_regs.reg_eax = 0;
+	dst_env->env_status = ENV_RUNNABLE;
+
+	return 0;
+	//panic("sys_ipc_try_send not implemented");
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -382,7 +434,28 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	//panic("sys_ipc_recv not implemented");
+	struct Env *env;
+	uintptr_t addr;
+	int r;
+
+	if ((r = envid2env(0, &env, false)) < 0) {
+		return r;
+	}
+
+	if (dstva) {
+		addr = (uintptr_t)dstva;
+		if (addr < UTOP) {
+			if (addr % PGSIZE != 0) {
+				return -E_INVAL;
+			}
+			env->env_ipc_dstva = dstva;
+		}
+	}
+
+	env->env_ipc_recving = true;
+	env->env_status = ENV_NOT_RUNNABLE;
+	sched_yield();
 	return 0;
 }
 
@@ -404,7 +477,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_getenvid:
 			return sys_getenvid();
 		case SYS_env_destroy:
-			sys_env_destroy((envid_t)a1);
+			return sys_env_destroy((envid_t)a1);
 		case SYS_exofork:
 			return sys_exofork();
 		case SYS_env_set_status:
@@ -417,6 +490,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			return sys_page_unmap((envid_t)a1, (void *)a2);
 		case SYS_env_set_pgfault_upcall:
 			return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
+		case SYS_ipc_try_send:
+			return sys_ipc_try_send((envid_t)a1, a2, (void *)a3, (int)a4);
+		case SYS_ipc_recv:
+			return sys_ipc_recv((void *)a1);
 		case SYS_yield:
 			sched_yield();
 	default:

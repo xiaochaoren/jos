@@ -156,13 +156,13 @@ fork(void)
 		panic("pgfault page unmap: %e", r);
 	}
 
+	if ((r = sys_env_set_pgfault_upcall(envid, thisenv->env_pgfault_upcall)) < 0) {
+		panic("sys_env_set_pgfault_upcall: %e", r);
+	}
+
 	// Start the child environment running
 	if ((r = sys_env_set_status(envid, ENV_RUNNABLE)) < 0) {
 		panic("sys_env_set_status: %e", r);
-	}
-
-	if ((r = sys_env_set_pgfault_upcall(envid, thisenv->env_pgfault_upcall)) < 0) {
-		panic("sys_env_set_pgfault_upcall: %e", r);
 	}
 
 	return envid;
