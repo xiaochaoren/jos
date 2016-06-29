@@ -53,7 +53,6 @@ void
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
 	// LAB 4: Your code here.
-	//panic("ipc_send not implemented");
 	void *srcva;
 	int r;
 

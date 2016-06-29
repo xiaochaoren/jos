@@ -14,6 +14,8 @@
 #include <kern/sched.h>
 #include <kern/cpu.h>
 #include <kern/spinlock.h>
+#include "../inc/env.h"
+#include "../inc/trap.h"
 
 struct Env *envs = NULL;		// All environments
 static struct Env *env_free_list;	// Free environment list
@@ -433,6 +435,9 @@ env_create(uint8_t *binary, enum EnvType type)
 
 	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
 	// LAB 5: Your code here.
+	if (type == ENV_TYPE_FS) {
+		env->env_tf.tf_eflags |= FL_IOPL_MASK;
+	}
 }
 
 //
